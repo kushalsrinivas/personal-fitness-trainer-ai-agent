@@ -3,16 +3,38 @@ Personal Fitness Trainer Agent - Specialized in workout planning and exercise gu
 """
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from pathlib import Path
+
+# Add the parent directory to the path to import fitness_tools
+current_dir = Path(__file__).parent
+agent_dir = current_dir.parent.parent
+sys.path.insert(0, str(agent_dir))
 
 from google.adk.agents import Agent
-from fitness_tools import (
-    search_exercises,
-    get_exercise_categories, 
-    get_muscle_groups,
-    create_workout_plan,
-    get_exercise_by_name
-)
+
+try:
+    from fitness_tools import (
+        search_exercises,
+        get_exercise_categories, 
+        get_muscle_groups,
+        create_workout_plan,
+        get_exercise_by_name
+    )
+except ImportError:
+    # Fallback import if running from different context
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "fitness_tools", 
+        agent_dir / "fitness_tools.py"
+    )
+    fitness_tools = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fitness_tools)
+    
+    search_exercises = fitness_tools.search_exercises
+    get_exercise_categories = fitness_tools.get_exercise_categories
+    get_muscle_groups = fitness_tools.get_muscle_groups
+    create_workout_plan = fitness_tools.create_workout_plan
+    get_exercise_by_name = fitness_tools.get_exercise_by_name
 
 fitness_trainer = Agent(
     name="fitness_trainer",

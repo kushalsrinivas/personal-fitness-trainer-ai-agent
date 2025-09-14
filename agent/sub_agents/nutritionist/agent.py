@@ -3,15 +3,36 @@ Nutritionist Agent - Specialized in diet planning and nutritional guidance.
 """
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from pathlib import Path
+
+# Add the parent directory to the path to import nutrition_tools
+current_dir = Path(__file__).parent
+agent_dir = current_dir.parent.parent
+sys.path.insert(0, str(agent_dir))
 
 from google.adk.agents import Agent
-from nutrition_tools import (
-    calculate_daily_calories,
-    create_meal_plan,
-    get_nutrition_recommendations,
-    analyze_food_item
-)
+
+try:
+    from nutrition_tools import (
+        calculate_daily_calories,
+        create_meal_plan,
+        get_nutrition_recommendations,
+        analyze_food_item
+    )
+except ImportError:
+    # Fallback import if running from different context
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "nutrition_tools", 
+        agent_dir / "nutrition_tools.py"
+    )
+    nutrition_tools = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(nutrition_tools)
+    
+    calculate_daily_calories = nutrition_tools.calculate_daily_calories
+    create_meal_plan = nutrition_tools.create_meal_plan
+    get_nutrition_recommendations = nutrition_tools.get_nutrition_recommendations
+    analyze_food_item = nutrition_tools.analyze_food_item
 
 nutritionist = Agent(
     name="nutritionist",
